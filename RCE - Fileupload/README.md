@@ -1,5 +1,5 @@
-# RCE - FileUpload (Concise)
-![POC](image.png)
+# RCE - FileUpload (Arbitary File Write)
+![POC - RCE - FileUpload (Arbitary File Write](RCE%20-%20Fileupload%20-%20POC%20.png)
 ## Summary
 
 This example demonstrates a **Path Traversal → Arbitrary File Write**: a user-controlled filename allows overwriting files the Node process user can write. The key point I want to highlight is about how the operating system and Node behave when a source file (e.g. `index.js`) is overwritten while Node is running.
