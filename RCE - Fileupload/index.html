@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>آپلود فایل</title>
+  <style>
+    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;direction:rtl;background:#f7fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.08);padding:20px;max-width:420px;width:100%}
+    h1{font-size:18px;margin:0 0 12px}
+    label{display:block;margin:8px 0 6px;font-size:13px}
+    input[type="file"]{display:block}
+    input[type="text"]{width:100%;padding:8px;border:1px solid #e6edf3;border-radius:6px}
+    .row{display:flex;gap:8px;margin-top:12px}
+    button{flex:1;padding:10px;border-radius:8px;border:0;background:#0ea5a4;color:white;font-weight:600;cursor:pointer}
+    button.secondary{background:#94a3b8}
+    progress{width:100%;height:12px;margin-top:12px;border-radius:6px;overflow:hidden}
+    .log{margin-top:10px;padding:8px;background:#f1f5f9;border-radius:6px;font-size:13px;min-height:40px;white-space:pre-wrap}
+    .hint{font-size:12px;color:#64748b;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>آپلود فایل به سرور</h1>
+
+    <label for="file">فایل را انتخاب کنید</label>
+    <input id="file" type="file" />
+
+    <label for="filename">نام فایل (اختیاری)</label>
+    <input id="filename" type="text" placeholder="اگر خالی بگذارید، نام فایل اصلی استفاده می‌شود" />
+
+    <div class="row">
+      <button id="uploadBtn">آپلود</button>
+      <button id="useNameBtn" class="secondary" title="نام فایل را از فایل انتخاب شده پر کن">از نام فایل استفاده کن</button>
+    </div>
+
+    <progress id="progress" value="0" max="100" style="display:none"></progress>
+
+    <div class="log" id="log">آماده</div>
+
+    <div class="hint">
+      توجه: این صفحه فقط رابط کاربری است. امن‌سازی سمت سرور (اعتبارسنجی نام/مسیر، جلوگیری از Path Traversal) ضروری است.
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file');
+    const filenameInput = document.getElementById('filename');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const useNameBtn = document.getElementById('useNameBtn');
+    const progressEl = document.getElementById('progress');
+    const log = document.getElementById('log');
+
+    useNameBtn.addEventListener('click', () => {
+      const f = fileInput.files[0];
+      if (!f) {
+        log.textContent = 'ابتدا یک فایل انتخاب کنید.';
+        return;
+      }
+      filenameInput.value = f.name;
+      log.textContent = 'نام فایل در ورودی قرار گرفت.';
+    });
+
+    uploadBtn.addEventListener('click', () => {
+      const f = fileInput.files[0];
+      if (!f) {
+        log.textContent = 'هیچ فایلی انتخاب نشده.';
+        return;
+      }
+
+      let desiredName = filenameInput.value.trim();
+      if (desiredName === '') desiredName = f.name;
+
+      const form = new FormData();
+      form.append('file', f);
+      form.append('filename', desiredName);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'http://localhost:3000/upload', true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          progressEl.style.display = 'block';
+          progressEl.value = pct;
+          log.textContent = `در حال آپلود: ${pct}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        progressEl.style.display = 'none';
+        if (xhr.status >= 200 && xhr.status < 300) {
+          log.textContent = `پاسخ سرور (${xhr.status}):\n${xhr.responseText}`;
+        } else {
+          log.textContent = `خطا از سرور (${xhr.status}):\n${xhr.responseText || xhr.statusText}`;
+        }
+      };
+
+      xhr.onerror = () => {
+        progressEl.style.display = 'none';
+        log.textContent = 'خطا در ارسال درخواست (network error).';
+      };
+
+      xhr.send(form);
+      log.textContent = 'در حال شروع آپلود...';
+    });
+  </script>
+</body>
+</html>
