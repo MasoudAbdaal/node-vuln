@@ -32,19 +32,6 @@ Examples of the classes of vulnerabilities and unsafe patterns you will find doc
 * Path Traversal / Arbitrary File Read
 * Insecure use of third-party packages 
 
-
-## How the repo is organized
-
-```
-├─ CVE-2017-16082 (VulnHub)
-|
-├─ CVE-2017-14849 (VulnHub)
-|
-├─ RCE - SSTI/
-│  ├─ RCE - SSTI .js
-│  ├─ README.md
-└─ README.md
-```
 # General Guides
 ## Print Bytecodes
 ```bash
