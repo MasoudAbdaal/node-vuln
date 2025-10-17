@@ -146,6 +146,7 @@ executePayload();
 
 ## References
 
+- [OWASP Juice-shop RCE On vm2.js Library (CVE-2023-37903)](https://github.com/juice-shop/juice-shop/issues/2715)
 - [CVE-2023-37903 Details](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-37903)
 - [vm2 GitHub Repository](https://github.com/patriksimek/vm2)
 - [Node.js util.inspect.custom Documentation](https://nodejs.org/api/util.html#utilinspectcustom)
