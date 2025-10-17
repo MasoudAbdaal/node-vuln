@@ -1,0 +1,40 @@
+{
+  "name": "vm2-sandbox-escape-lab",
+  "version": "1.0.0",
+  "description": "Educational lab demonstrating CVE-2023-37903 vm2 sandbox escape vulnerability",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "vm2",
+    "sandbox",
+    "escape",
+    "vulnerability",
+    "security",
+    "education",
+    "CVE-2023-37903"
+  ],
+  "author": "Security Research Lab",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.18.2",
+    "vm2": "3.9.19",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/security-lab/vm2-sandbox-escape"
+  },
+  "bugs": {
+    "url": "https://github.com/security-lab/vm2-sandbox-escape/issues"
+  },
+  "homepage": "https://github.com/security-lab/vm2-sandbox-escape#readme"
+}
