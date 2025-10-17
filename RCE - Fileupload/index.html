@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fa">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>آپلود فایل</title>
+  <title>File Upload</title>
   <style>
-    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;direction:rtl;background:#f7fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;direction:ltr;background:#f7fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
     .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.08);padding:20px;max-width:420px;width:100%}
     h1{font-size:18px;margin:0 0 12px}
     label{display:block;margin:8px 0 6px;font-size:13px}
@@ -21,25 +21,25 @@
 </head>
 <body>
   <div class="card" role="main">
-    <h1>آپلود فایل به سرور</h1>
+    <h1>File Upload to Server</h1>
 
-    <label for="file">فایل را انتخاب کنید</label>
+    <label for="file">Select File</label>
     <input id="file" type="file" />
 
-    <label for="filename">نام فایل (اختیاری)</label>
-    <input id="filename" type="text" placeholder="اگر خالی بگذارید، نام فایل اصلی استفاده می‌شود" />
+    <label for="filename">Filename (Optional)</label>
+    <input id="filename" type="text" placeholder="If left empty, original filename will be used" />
 
     <div class="row">
-      <button id="uploadBtn">آپلود</button>
-      <button id="useNameBtn" class="secondary" title="نام فایل را از فایل انتخاب شده پر کن">از نام فایل استفاده کن</button>
+      <button id="uploadBtn">Upload</button>
+      <button id="useNameBtn" class="secondary" title="Fill filename from selected file">Use File Name</button>
     </div>
 
     <progress id="progress" value="0" max="100" style="display:none"></progress>
 
-    <div class="log" id="log">آماده</div>
+    <div class="log" id="log">Ready</div>
 
     <div class="hint">
-      توجه: این صفحه فقط رابط کاربری است. امن‌سازی سمت سرور (اعتبارسنجی نام/مسیر، جلوگیری از Path Traversal) ضروری است.
+      Note: This page is only a user interface. Server-side security (filename/path validation, preventing Path Traversal) is essential.
     </div>
   </div>
 
@@ -54,17 +54,17 @@
     useNameBtn.addEventListener('click', () => {
       const f = fileInput.files[0];
       if (!f) {
-        log.textContent = 'ابتدا یک فایل انتخاب کنید.';
+        log.textContent = 'Please select a file first.';
         return;
       }
       filenameInput.value = f.name;
-      log.textContent = 'نام فایل در ورودی قرار گرفت.';
+      log.textContent = 'Filename filled in input field.';
     });
 
     uploadBtn.addEventListener('click', () => {
       const f = fileInput.files[0];
       if (!f) {
-        log.textContent = 'هیچ فایلی انتخاب نشده.';
+        log.textContent = 'No file selected.';
         return;
       }
 
@@ -83,26 +83,26 @@
           const pct = Math.round((e.loaded / e.total) * 100);
           progressEl.style.display = 'block';
           progressEl.value = pct;
-          log.textContent = `در حال آپلود: ${pct}%`;
+          log.textContent = `Uploading: ${pct}%`;
         }
       };
 
       xhr.onload = () => {
         progressEl.style.display = 'none';
         if (xhr.status >= 200 && xhr.status < 300) {
-          log.textContent = `پاسخ سرور (${xhr.status}):\n${xhr.responseText}`;
+          log.textContent = `Server response (${xhr.status}):\n${xhr.responseText}`;
         } else {
-          log.textContent = `خطا از سرور (${xhr.status}):\n${xhr.responseText || xhr.statusText}`;
+          log.textContent = `Server error (${xhr.status}):\n${xhr.responseText || xhr.statusText}`;
         }
       };
 
       xhr.onerror = () => {
         progressEl.style.display = 'none';
-        log.textContent = 'خطا در ارسال درخواست (network error).';
+        log.textContent = 'Request error (network error).';
       };
 
       xhr.send(form);
-      log.textContent = 'در حال شروع آپلود...';
+      log.textContent = 'Starting upload...';
     });
   </script>
 </body>
