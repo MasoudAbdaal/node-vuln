@@ -14,4 +14,4 @@ app.get("/", (req, res) => {
     return res.send(ejs.render(template))
 })
 
-app.listen(port, () => log(`Listen On http://localhots:${port}`))
+app.listen(port, () => log(`Listen On http://localhost:${port}`))

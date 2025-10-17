@@ -45,3 +45,13 @@ Examples of the classes of vulnerabilities and unsafe patterns you will find doc
 │  ├─ README.md
 └─ README.md
 ```
+# General Guides
+## Print Bytecodes
+```bash
+node --print-bytecode .\index.js > bytecodes.txt.c
+```
+## Run project
+```bash
+npm i
+node index.js
+```
