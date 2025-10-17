@@ -3,11 +3,13 @@
 const https = require('https')
 const express = require('express')
 const ejs = require('ejs')
+const cors = require('cors')
 const { log } = require('console')
 
 const app = express()
 const port = 3000
 
+app.use(cors())
 app.set("view engine", "ejs")
 
 app.get("/", (req, res) => {

@@ -1,0 +1,18 @@
+{
+  "name": "rce-ssti",
+  "version": "1.0.0",
+  "description": "```js\r const https = require('https')\r const express = require('express')\r const ejs = require('ejs')\r const { log } = require('console')",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "console": "^0.7.2",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}

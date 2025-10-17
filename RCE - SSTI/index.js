@@ -1,8 +1,10 @@
 const express = require('express')
 const ejs = require('ejs')
+const cors = require('cors')
 const { log } = require('console')
 
 const app = express()
+app.use(cors())
 const port = 3000
 
 app.set("view engine", "ejs")

