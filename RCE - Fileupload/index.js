@@ -8,16 +8,14 @@ const app = express();
 app.use(cors());
 app.use(fileUpload());
 
-// 🚨 آسیب‌پذیری: آپلود فایل با قابلیت Path Traversal
 app.post('/upload', (req, res) => {
     if (!req.files || !req.files.file) {
         return res.status(400).send('No file uploaded');
     }
 
     const file = req.files.file;
-    const fileName = req.body.filename || file.name; // 🚨 ورودی کاربر بدون اعتبارسنجی
+    const fileName = req.body.filename || file.name;
     
-    // 🚨 آسیب‌پذیری اصلی: عدم اعتبارسنجی مسیر
     const uploadPath = path.join(__dirname, 'uploads', fileName);
     
     file.mv(uploadPath, (err) => {
@@ -28,9 +26,8 @@ app.post('/upload', (req, res) => {
     });
 });
 
-// 🚨 آسیب‌پذیری: خواندن فایل‌های حساس
 app.get('/files', (req, res) => {
-    const filePath = req.query.path; // 🚨 ورودی مستقیم از کاربر
+    const filePath = req.query.path; 
     const fullPath = path.join(__dirname, filePath);
     
     fs.readFile(fullPath, 'utf8', (err, data) => {
